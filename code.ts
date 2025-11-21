@@ -638,19 +638,26 @@ async function generateComponent(
       { name: 'destructive', bg: 'destructive', fg: 'destructive-foreground', border: 'destructive' },
     ];
 
+    const componentSetFrame = figma.createFrame();
+    componentSetFrame.name = 'Alert';
+    componentSetFrame.layoutMode = 'VERTICAL';
+    componentSetFrame.itemSpacing = 16;
+    componentSetFrame.x = 50;
+    componentSetFrame.y = 50;
+    componentSetFrame.fills = [];
+
     for (const variant of variants) {
       const frame = figma.createFrame();
-      frame.name = `Alert/${variant.name}`;
+      frame.name = `variant=${variant.name}`;
       frame.layoutMode = 'VERTICAL';
-      frame.primaryAxisSizingMode = 'AUTO';
+      frame.primaryAxisSizingMode = 'FIXED';
+      frame.counterAxisSizingMode = 'AUTO';
       frame.paddingLeft = 16;
       frame.paddingRight = 16;
       frame.paddingTop = 16;
       frame.paddingBottom = 16;
       frame.itemSpacing = 8;
       frame.cornerRadius = 8;
-      frame.x = xOffset;
-      frame.y = 50;
       frame.resize(400, 80);
 
       const bgVar = findVariable(variant.bg);
@@ -684,10 +691,22 @@ async function generateComponent(
 
       frame.appendChild(title);
       frame.appendChild(desc);
-      page.appendChild(frame);
-      figma.createComponentFromNode(frame);
-      xOffset += 450;
+      componentSetFrame.appendChild(frame);
     }
+
+    page.appendChild(componentSetFrame);
+
+    // Convert to component set
+    const components: ComponentNode[] = [];
+    for (const child of componentSetFrame.children) {
+      const component = figma.createComponentFromNode(child as FrameNode);
+      components.push(component);
+    }
+
+    const componentSet = figma.combineAsVariants(components, componentSetFrame);
+    componentSet.name = 'Alert';
+    componentSet.x = 50;
+    componentSet.y = 50;
   }
 
   else if (componentName === 'textarea') {
@@ -701,7 +720,7 @@ async function generateComponent(
     frame.paddingBottom = 8;
     frame.cornerRadius = 6;
     frame.x = 50;
-    frame.y = 120;
+    frame.y = 150;  // Positioned below Input
     frame.resize(280, 100);
 
     const bgVar = findVariable('background');
@@ -736,7 +755,7 @@ async function generateComponent(
     frame.resize(16, 16);
     frame.cornerRadius = 3;
     frame.x = 50;
-    frame.y = 250;
+    frame.y = 280;  // Positioned below Textarea
 
     const bgVar = findVariable('background');
     if (bgVar) {
